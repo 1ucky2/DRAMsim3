@@ -17,9 +17,14 @@ endif()
 add_library(inih INTERFACE)
 target_include_directories(inih INTERFACE ext/headers)
 
-add_library(format INTERFACE)
-target_include_directories(format INTERFACE ext/fmt/include)
-target_compile_definitions(format INTERFACE FMT_HEADER_ONLY=1)
+find_package(fmt)
+if(NOT fmt_FOUND)
+    message(STATUS "External fmt package not found, using internal one")
+    add_library(fmt INTERFACE)
+    target_include_directories(fmt INTERFACE ext/fmt/include)
+    target_compile_definitions(fmt INTERFACE FMT_HEADER_ONLY=1)
+    add_library(fmt::fmt-header-only ALIAS fmt)
+endif(NOT fmt_FOUND)
 
 # argparsing library, only used in main program not the library
 add_library(args INTERFACE)
@@ -81,7 +86,7 @@ endif (ADDR_TRACE)
 
 target_include_directories(dramsim3 INTERFACE src)
 target_compile_options(dramsim3 PRIVATE -Wall)
-target_link_libraries(dramsim3 inih format)
+target_link_libraries(dramsim3 PRIVATE inih fmt::fmt-header-only)
 set_target_properties(dramsim3 PROPERTIES
     CXX_EXTENSIONS NO
 )
